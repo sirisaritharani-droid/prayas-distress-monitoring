@@ -3,157 +3,316 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRAYAS | AI-Powered Distress Monitoring (SIH26094)</title>
+    <title>PRAYAS | Mental Health Distress Monitoring</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f8fafc; color: #1e293b; padding: 24px; }
-        .container { max-width: 1100px; margin: 0 auto; }
-        .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 28px; border-radius: 12px; color: white; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { font-size: 1.8rem; color: #38bdf8; }
-        .badge { background: #0284c7; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
-        .notice { background: #f1f5f9; border-left: 4px solid #0284c7; padding: 14px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 0.88rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card h4 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
-        .card .val { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
-        .pill-high { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; }
-        .pill-low { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; }
-        .chart-box { background: white; padding: 24px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
-        .reasons { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #f8fafc; color: #1e293b; display: flex; min-height: 100vh; }
+        
+        .sidebar { width: 280px; background: #ffffff; border-right: 1px solid #e2e8f0; padding: 24px 18px; display: flex; flex-direction: column; flex-shrink: 0; }
+        .sidebar h2 { font-size: 1.3rem; margin-bottom: 16px; color: #0f172a; }
+        .sidebar label { font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 6px; display: block; }
+        .sidebar select { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 0.9rem; margin-bottom: 20px; outline: none; }
+        .sidebar hr { border: none; border-top: 1px solid #f1f5f9; margin: 16px 0; }
+        
+        .nav-group h4 { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px; }
+        .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; color: #334155; font-size: 0.9rem; font-weight: 500; cursor: pointer; margin-bottom: 4px; transition: all 0.2s; }
+        .nav-item:hover { background: #f1f5f9; }
+        .nav-item.active { background: #e0f2fe; color: #0284c7; font-weight: 600; }
+        .nav-dot { width: 8px; height: 8px; border-radius: 50%; border: 2px solid #0284c7; }
+        .nav-item.active .nav-dot { background: #0284c7; }
+        
+        .main-content { flex: 1; padding: 24px 32px; overflow-y: auto; }
+        .main-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 24px 28px; border-radius: 12px; color: white; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .main-header h1 { font-size: 1.8rem; font-weight: 700; color: #38bdf8; margin: 0; }
+        .badge { background: #0284c7; color: #e0f2fe; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        
+        .disclaimer-badge { background-color: #f1f5f9; border-left: 4px solid #0284c7; padding: 12px 16px; font-size: 0.85rem; color: #334155; border-radius: 0 8px 8px 0; margin-bottom: 20px; }
+        
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .metric-card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+        .metric-card h4 { font-size: 0.72rem; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
+        .metric-card .val { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+        .metric-card .sub { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
+        
+        .risk-pill-high { background-color: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; }
+        .risk-pill-low { background-color: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 0.85rem; }
+        
+        .content-card { background: white; padding: 24px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
         .reason-item { padding: 10px 14px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color: #991b1b; }
-        .selector { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
-        select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 0.9rem; }
+        
+        .slider-group { margin-bottom: 16px; }
+        .slider-group label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
+        .slider-group input[type="range"] { width: 100%; accent-color: #0284c7; }
+        .btn-primary { background: #0284c7; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-primary:hover { background: #0369a1; }
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 0.9rem; }
+        th { background: #f8fafc; color: #64748b; font-weight: 600; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
+
+    <div class="sidebar">
+        <h2>Navigation</h2>
+        <label>Switch Workspace Role</label>
+        <select id="roleSelect" onchange="handleRoleChange()">
+            <option value="survivor">Survivor / User</option>
+            <option value="counsellor">Counsellor / Professional</option>
+            <option value="admin">Admin / Responsible AI</option>
+        </select>
+        
+        <div id="navGroup" class="nav-group"></div>
+
+        <hr>
+        <label>🧪 SIH Interactive Scenarios</label>
+        <select id="scenarioSelect" onchange="updateScenario()">
+            <option value="p102">Scenario A (P-102): Gradual Distress Spike</option>
+            <option value="p101">Scenario B (P-101): Stable Baseline</option>
+            <option value="p105">Scenario C (P-105): Recovery Trajectory</option>
+        </select>
+    </div>
+
+    <div class="main-content">
+        <div class="main-header">
             <div>
                 <h1>PRAYAS</h1>
-                <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 4px;">Dynamic Mental Health Monitoring & Distress Prediction (SIH26094)</p>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 4px;">AI-Powered Dynamic Mental Health Monitoring & Distress Prediction (SIH26094)</p>
             </div>
-            <span class="badge">Team SH-13 • Live Demo</span>
+            <span class="badge">Team PRAYAS • SH-13</span>
         </div>
 
-        <div class="notice">
-            <strong>🛡️ Responsible AI Safety Notice:</strong> PRAYAS provides an AI-assisted distress-risk estimate for support prioritization. It is <strong>not a medical diagnosis</strong> and does not replace qualified professionals.
+        <div class="disclaimer-badge">
+            <strong>🛡️ Responsible AI & Ethical Safety Notice:</strong><br>
+            PRAYAS provides an AI-assisted distress-risk estimate for support prioritization. 
+            It is <strong>not a medical diagnosis</strong> and does not replace qualified psychologists, counsellors, or medical professionals.
         </div>
 
-        <div class="selector">
-            <label><strong>Select Presentation Scenario:</strong></label>
-            <select id="scenarioSelect" onchange="updateView()">
-                <option value="p102">Scenario A (P-102): Gradual Deterioration Spike (High Risk)</option>
-                <option value="p101">Scenario B (P-101): Stable Baseline (Low Risk)</option>
-                <option value="p105">Scenario C (P-105): Post-Trauma Recovery (Improving)</option>
-            </select>
-        </div>
-
-        <div class="grid">
-            <div class="card">
-                <h4>Estimated Distress Risk</h4>
-                <div id="riskVal" class="val"><span class="pill-high">HIGH (78%)</span></div>
-            </div>
-            <div class="card">
-                <h4>Trajectory Trend</h4>
-                <div id="trendVal" class="val" style="color: #ef4444;">↑ Escalating</div>
-            </div>
-            <div class="card">
-                <h4>Latest Mood</h4>
-                <div id="moodVal" class="val">2.9 / 10</div>
-            </div>
-            <div class="card">
-                <h4>Latest Sleep</h4>
-                <div id="sleepVal" class="val">3.4 hrs</div>
-            </div>
-        </div>
-
-        <div class="chart-box">
-            <h3 style="margin-bottom: 16px; font-size: 1.1rem;">📈 Longitudinal Distress Signals vs. Personal Baseline</h3>
-            <canvas id="chartCanvas" height="110"></canvas>
-        </div>
-
-        <div class="reasons">
-            <h3 style="margin-bottom: 12px; font-size: 1.1rem;">🔍 Explainable AI Signals (SHAP/Feature Deviations)</h3>
-            <div id="reasonsContainer"></div>
-        </div>
+        <div id="viewContainer"></div>
     </div>
 
     <script>
-        const dataConfig = {
+        const navStructure = {
+            survivor: ["Dashboard Overview", "Daily Wellbeing Check-in", "My Baseline & Trends", "Support & Resources", "Data & Consent"],
+            counsellor: ["Active Caseload Triage", "Individual Case Drilldown", "Support Follow-up Manager"],
+            admin: ["Model Performance & ROC", "Explainability & Feature Weights", "Responsible AI Checklist"]
+        };
+
+        const scenarioData = {
             p102: {
-                risk: '<span class="pill-high">HIGH (78%)</span>',
+                id: "P-102",
+                riskBadge: '<span class="risk-pill-high">HIGH (78%)</span>',
                 trend: '↑ Escalating',
                 trendColor: '#ef4444',
                 mood: '2.9 / 10',
+                moodDev: 'Baseline: 7.2 (-4.3)',
                 sleep: '3.4 hrs',
+                sleepDev: 'Baseline: 7.4h (-4.0h)',
                 labels: ['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 13','Day 15'],
-                moodData: [7.5, 7.0, 6.5, 5.8, 4.8, 3.9, 3.2, 2.9],
-                stressData: [3.0, 3.5, 4.5, 5.8, 6.8, 7.8, 8.2, 8.7],
-                sleepData: [7.5, 7.2, 6.5, 5.8, 4.9, 4.2, 3.8, 3.4],
+                moodArr: [7.5, 7.0, 6.5, 5.8, 4.8, 3.9, 3.2, 2.9],
+                stressArr: [3.0, 3.5, 4.5, 5.8, 6.8, 7.8, 8.2, 8.7],
+                sleepArr: [7.5, 7.2, 6.5, 5.8, 4.9, 4.2, 3.8, 3.4],
                 reasons: [
                     "Stress level significantly elevated compared to personal baseline (+5.6 pts)",
-                    "Substantial drop in nightly sleep duration (-4.0 hrs drop)",
+                    "Nightly sleep decreased by 4.0 hours compared to baseline",
                     "Sustained downward mood trajectory over consecutive 7 check-ins",
                     "Heightened anxiety relative to usual baseline pattern"
                 ]
             },
             p101: {
-                risk: '<span class="pill-low">LOW (18%)</span>',
+                id: "P-101",
+                riskBadge: '<span class="risk-pill-low">LOW (18%)</span>',
                 trend: '→ Stable',
                 trendColor: '#16a34a',
                 mood: '7.2 / 10',
+                moodDev: 'Baseline: 7.2 (0.0)',
                 sleep: '7.5 hrs',
+                sleepDev: 'Baseline: 7.4h (+0.1h)',
                 labels: ['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 13','Day 15'],
-                moodData: [7.2, 7.3, 7.4, 7.1, 7.3, 7.1, 7.4, 7.2],
-                stressData: [3.1, 3.2, 3.0, 3.1, 3.2, 3.0, 2.9, 3.1],
-                sleepData: [7.5, 7.4, 7.3, 7.4, 7.6, 7.5, 7.3, 7.5],
+                moodArr: [7.2, 7.3, 7.4, 7.1, 7.3, 7.1, 7.4, 7.2],
+                stressArr: [3.1, 3.2, 3.0, 3.1, 3.2, 3.0, 2.9, 3.1],
+                sleepArr: [7.5, 7.4, 7.3, 7.4, 7.6, 7.5, 7.3, 7.5],
                 reasons: ["Check-in values reflect your usual personal baseline pattern."]
             },
             p105: {
-                risk: '<span class="pill-low">LOW (22%)</span>',
+                id: "P-105",
+                riskBadge: '<span class="risk-pill-low">LOW (22%)</span>',
                 trend: '↓ Improving',
                 trendColor: '#16a34a',
                 mood: '7.6 / 10',
+                moodDev: 'Baseline: 7.2 (+0.4)',
                 sleep: '7.5 hrs',
+                sleepDev: 'Baseline: 7.4h (+0.1h)',
                 labels: ['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 13','Day 15'],
-                moodData: [3.5, 4.0, 4.8, 5.8, 6.4, 7.0, 7.3, 7.6],
-                stressData: [8.0, 7.5, 6.5, 5.5, 4.5, 3.8, 3.2, 2.9],
-                sleepData: [4.2, 4.8, 5.5, 6.2, 6.8, 7.2, 7.5, 7.5],
+                moodArr: [3.5, 4.0, 4.8, 5.8, 6.4, 7.0, 7.3, 7.6],
+                stressArr: [8.0, 7.5, 6.5, 5.5, 4.5, 3.8, 3.2, 2.9],
+                sleepArr: [4.2, 4.8, 5.5, 6.2, 6.8, 7.2, 7.5, 7.5],
                 reasons: ["Recovery trajectory detected: Stress decreasing, sleep and mood normalizing."]
             }
         };
 
-        let chart;
-        function updateView() {
-            const key = document.getElementById('scenarioSelect').value;
-            const item = dataConfig[key];
+        let currentRole = "survivor";
+        let currentTab = "Dashboard Overview";
+        let currentScenario = "p102";
+        let mainChart = null;
 
-            document.getElementById('riskVal').innerHTML = item.risk;
-            document.getElementById('trendVal').innerText = item.trend;
-            document.getElementById('trendVal').style.color = item.trendColor;
-            document.getElementById('moodVal').innerText = item.mood;
-            document.getElementById('sleepVal').innerText = item.sleep;
+        function handleRoleChange() {
+            currentRole = document.getElementById("roleSelect").value;
+            currentTab = navStructure[currentRole][0];
+            renderNav();
+            renderView();
+        }
 
-            const box = document.getElementById('reasonsContainer');
-            box.innerHTML = item.reasons.map(r => `<div class="reason-item" style="background:${key==='p102'?'#fef2f2':'#f0fdf4'}; border-color:${key==='p102'?'#ef4444':'#22c55e'}; color:${key==='p102'?'#991b1b':'#166534'};">• ${r}</div>`).join('');
+        function renderNav() {
+            const container = document.getElementById("navGroup");
+            const tabs = navStructure[currentRole];
+            let html = `<h4>${currentRole.toUpperCase()} PORTAL</h4>`;
+            tabs.forEach(tab => {
+                const activeClass = tab === currentTab ? 'active' : '';
+                html += `
+                    <div class="nav-item ${activeClass}" onclick="switchTab('${tab}')">
+                        <div class="nav-dot"></div>
+                        <span>${tab}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
 
-            if (chart) chart.destroy();
+        function switchTab(tab) {
+            currentTab = tab;
+            renderNav();
+            renderView();
+        }
+
+        function updateScenario() {
+            currentScenario = document.getElementById("scenarioSelect").value;
+            renderView();
+        }
+
+        function renderView() {
+            const container = document.getElementById("viewContainer");
+            const data = scenarioData[currentScenario];
+
+            if (currentRole === "survivor") {
+                if (currentTab === "Dashboard Overview") {
+                    container.innerHTML = `
+                        <h2 style="margin-bottom: 6px;">👋 Welcome back. Anonymous Case ID: ${data.id}</h2>
+                        <p style="color: #64748b; margin-bottom: 20px;">Here is an overview of how your wellbeing signals compare against your personal baseline.</p>
+                        
+                        <div class="grid">
+                            <div class="metric-card">
+                                <h4>Estimated Distress Risk</h4>
+                                <div class="val">${data.riskBadge}</div>
+                                <div class="sub">Confidence: 88%</div>
+                            </div>
+                            <div class="metric-card">
+                                <h4>Trajectory Trend</h4>
+                                <div class="val" style="color: ${data.trendColor}">${data.trend}</div>
+                                <div class="sub">Compared to 7-day MA</div>
+                            </div>
+                            <div class="metric-card">
+                                <h4>Latest Mood</h4>
+                                <div class="val">${data.mood}</div>
+                                <div class="sub">${data.moodDev}</div>
+                            </div>
+                            <div class="metric-card">
+                                <h4>Latest Sleep</h4>
+                                <div class="val">${data.sleep}</div>
+                                <div class="sub">${data.sleepDev}</div>
+                            </div>
+                        </div>
+
+                        <div class="content-card">
+                            <h3 style="margin-bottom: 16px; font-size: 1.1rem;">📈 Longitudinal Distress Signals vs. Personal Baseline</h3>
+                            <canvas id="chartCanvas" height="100"></canvas>
+                        </div>
+
+                        <div class="content-card">
+                            <h3 style="margin-bottom: 12px; font-size: 1.1rem;">🔍 Why did the AI estimate this risk level?</h3>
+                            <div>${data.reasons.map(r => `<div class="reason-item">• ${r}</div>`).join('')}</div>
+                        </div>
+                    `;
+                    renderChart(data);
+                } else if (currentTab === "Daily Wellbeing Check-in") {
+                    container.innerHTML = `
+                        <h2>📝 Daily Wellbeing Check-in</h2>
+                        <p style="color: #64748b; margin-bottom: 20px;">Take 60 seconds to reflect on your day. Your answers help detect shifts from your baseline.</p>
+                        <div class="content-card">
+                            <div class="slider-group"><label>Mood (1 = Deeply distressing, 10 = Very positive)</label><input type="range" min="1" max="10" value="6"></div>
+                            <div class="slider-group"><label>Stress Level (1 = Completely calm, 10 = Overwhelming)</label><input type="range" min="1" max="10" value="4"></div>
+                            <div class="slider-group"><label>Nightly Sleep (Hours)</label><input type="range" min="0" max="14" value="7"></div>
+                            <button class="btn-primary" onclick="alert('✅ Check-in recorded securely. Personal baseline updated.')">Submit Check-in</button>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <h2>🤝 Support & Resources</h2>
+                        <div class="content-card">
+                            <p>• <strong>Request Direct Follow-up:</strong> Notify your assigned on-call case worker.</p>
+                            <p style="margin-top:8px;">• <strong>Trauma Grounding Tools:</strong> 4-7-8 Guided physiological breathing regulation.</p>
+                            <button class="btn-primary" style="margin-top:16px;" onclick="alert('Your request has been forwarded to an authorized support counsellor.')">Request Human Follow-up</button>
+                        </div>
+                    `;
+                }
+            } else if (currentRole === "counsellor") {
+                container.innerHTML = `
+                    <h2>📋 Counsellor Triage & Caseload Priority</h2>
+                    <div class="grid" style="margin-top:16px;">
+                        <div class="metric-card"><h4>Active Cases</h4><div class="val">42</div></div>
+                        <div class="metric-card"><h4>High Distress Risk</h4><div class="val" style="color:#ef4444;">6</div></div>
+                        <div class="metric-card"><h4>Moderate Risk</h4><div class="val">14</div></div>
+                        <div class="metric-card"><h4>Follow-ups Pending</h4><div class="val">11</div></div>
+                    </div>
+                    <div class="content-card">
+                        <h3>Authorized Survivor Caseload</h3>
+                        <table>
+                            <tr><th>Case ID</th><th>Risk Level</th><th>Trend</th><th>Status</th><th>Priority</th></tr>
+                            <tr><td><strong>P-102</strong></td><td><span class="risk-pill-high">HIGH (78%)</span></td><td>↑ Escalating</td><td>NOT REVIEWED</td><td style="color:#ef4444;font-weight:700;">🚨 Immediate</td></tr>
+                            <tr><td><strong>P-103</strong></td><td>MODERATE (52%)</td><td>↑ Escalating</td><td>SCHEDULED</td><td>⚠️ Moderate</td></tr>
+                            <tr><td><strong>P-101</strong></td><td><span class="risk-pill-low">LOW (18%)</span></td><td>→ Stable</td><td>REVIEWED</td><td>✅ Low</td></tr>
+                            <tr><td><strong>P-105</strong></td><td><span class="risk-pill-low">LOW (22%)</span></td><td>↓ Improving</td><td>SUPPORT PROVIDED</td><td>✅ Low</td></tr>
+                        </table>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <h2>⚙️ Machine Learning Model Validation & Governance</h2>
+                    <div class="grid" style="margin-top:16px;">
+                        <div class="metric-card"><h4>ROC-AUC</h4><div class="val">0.941</div></div>
+                        <div class="metric-card"><h4>Sensitivity / Recall</h4><div class="val">0.912</div></div>
+                        <div class="metric-card"><h4>Precision</h4><div class="val">0.875</div></div>
+                        <div class="metric-card"><h4>F1-Score</h4><div class="val">0.893</div></div>
+                    </div>
+                    <div class="content-card">
+                        <h3>🛡️ Responsible AI Compliance</h3>
+                        <p style="margin-top:8px;">✅ <strong>Non-Diagnostic Framing:</strong> Predictions strictly termed "distress risk estimates".</p>
+                        <p style="margin-top:8px;">✅ <strong>Human Oversight:</strong> Mandatory human-in-the-loop triage workflow.</p>
+                        <p style="margin-top:8px;">✅ <strong>Anonymity:</strong> Fully pseudonymized case identifiers throughout the pipeline.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderChart(data) {
+            if (mainChart) mainChart.destroy();
             const ctx = document.getElementById('chartCanvas').getContext('2d');
-            chart = new Chart(ctx, {
+            mainChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: item.labels,
+                    labels: data.labels,
                     datasets: [
-                        { label: 'Mood (1-10)', data: item.moodData, borderColor: '#0284c7', backgroundColor: '#0284c7', tension: 0.3 },
-                        { label: 'Stress (1-10)', data: item.stressData, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3 },
-                        { label: 'Sleep (Hours)', data: item.sleepData, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
+                        { label: 'Mood (1-10)', data: data.moodArr, borderColor: '#0284c7', backgroundColor: '#0284c7', tension: 0.3 },
+                        { label: 'Stress (1-10)', data: data.stressArr, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3 },
+                        { label: 'Sleep (Hours)', data: data.sleepArr, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
                     ]
                 },
                 options: { responsive: true, plugins: { legend: { position: 'top' } } }
             });
         }
-        updateView();
+
+        renderNav();
+        renderView();
     </script>
 </body>
 </html>
