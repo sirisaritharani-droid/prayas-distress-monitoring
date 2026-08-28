@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRAYAS | AI-Powered Distress Monitoring (SIH26094)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f8fafc; color: #1e293b; padding: 24px; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 28px; border-radius: 12px; color: white; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.8rem; color: #38bdf8; }
+        .badge { background: #0284c7; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+        .notice { background: #f1f5f9; border-left: 4px solid #0284c7; padding: 14px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 0.88rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .card { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card h4 { font-size: 0.75rem; color: #64748b; text-transform: uppercase; margin-bottom: 8px; }
+        .card .val { font-size: 1.5rem; font-weight: 700; color: #0f172a; }
+        .pill-high { background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; }
+        .pill-low { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; }
+        .chart-box { background: white; padding: 24px; border-radius: 10px; border: 1px solid #e2e8f0; margin-bottom: 24px; }
+        .reasons { background: white; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .reason-item { padding: 10px 14px; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 4px; margin-bottom: 8px; font-size: 0.9rem; font-weight: 500; color: #991b1b; }
+        .selector { margin-bottom: 20px; display: flex; gap: 10px; align-items: center; }
+        select { padding: 8px 12px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 600; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>PRAYAS</h1>
+                <p style="color: #94a3b8; font-size: 0.95rem; margin-top: 4px;">Dynamic Mental Health Monitoring & Distress Prediction (SIH26094)</p>
+            </div>
+            <span class="badge">Team SH-13 • Live Demo</span>
+        </div>
+
+        <div class="notice">
+            <strong>🛡️ Responsible AI Safety Notice:</strong> PRAYAS provides an AI-assisted distress-risk estimate for support prioritization. It is <strong>not a medical diagnosis</strong> and does not replace qualified professionals.
+        </div>
+
+        <div class="selector">
+            <label><strong>Select Presentation Scenario:</strong></label>
+            <select id="scenarioSelect" onchange="updateView()">
+                <option value="p102">Scenario A (P-102): Gradual Deterioration Spike (High Risk)</option>
+                <option value="p101">Scenario B (P-101): Stable Baseline (Low Risk)</option>
+                <option value="p105">Scenario C (P-105): Post-Trauma Recovery (Improving)</option>
+            </select>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h4>Estimated Distress Risk</h4>
+                <div id="riskVal" class="val"><span class="pill-high">HIGH (78%)</span></div>
+            </div>
+            <div class="card">
+                <h4>Trajectory Trend</h4>
+                <div id="trendVal" class="val" style="color: #ef4444;">↑ Escalating</div>
+            </div>
+            <div class="card">
+                <h4>Latest Mood</h4>
+                <div id="moodVal" class="val">2.9 / 10</div>
+            </div>
+            <div class="card">
+                <h4>Latest Sleep</h4>
+                <div id="sleepVal" class="val">3.4 hrs</div>
+            </div>
+        </div>
+
+        <div class="chart-box">
+            <h3 style="margin-bottom: 16px; font-size: 1.1rem;">📈 Longitudinal Distress Signals vs. Personal Baseline</h3>
+            <canvas id="chartCanvas" height="110"></canvas>
+        </div>
+
+        <div class="reasons">
+            <h3 style="margin-bottom: 12px; font-size: 1.1rem;">🔍 Explainable AI Signals (SHAP/Feature Deviations)</h3>
+            <div id="reasonsContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        const dataConfig = {
+            p102: {
+                risk: '<span class="pill-high">HIGH (78%)</span>',
+                trend: '↑ Escalating',
+                trendColor: '#ef4444',
+                mood: '2.9 / 10',
+                sleep: '3.4 hrs',
+                labels: ['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 13','Day 15'],
+                moodData: [7.5, 7.0, 6.5, 5.8, 4.8, 3.9, 3.2, 2.9],
+                stressData: [3.0, 3.5, 4.5, 5.8, 6.8, 7.8, 8.2, 8.7],
+                sleepData: [7.5, 7.2, 6.5, 5.8, 4.9, 4.2, 3.8, 3.4],
+                reasons: [
+                    "Stress level significantly elevated compared to personal baseline (+5.6 pts)",
+                    "Substantial drop in nightly sleep duration (-4.0 hrs drop)",
+                    "Sustained downward mood trajectory over consecutive 7 check-ins",
+                    "Heightened anxiety relative to usual baseline pattern"
+                ]
+            },
+            p101: {
+                risk: '<span class="pill-low">LOW (18%)</span>',
+                trend: '→ Stable',
+                trendColor: '#16a34a',
+                mood: '7.2 / 10',
+                sleep: '7.5 hrs',
+                labels: ['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 13','Day 15'],
+                moodData: [7.2, 7.3, 7.4, 7.1, 7.3, 7.1, 7.4, 7.2],
+                stressData: [3.1, 3.2, 3.0, 3.1, 3.2, 3.0, 2.9, 3.1],
+                sleepData: [7.5, 7.4, 7.3, 7.4, 7.6, 7.5, 7.3, 7.5],
+                reasons: ["Check-in values reflect your usual personal baseline pattern."]
+            },
+            p105: {
+                risk: '<span class="pill-low">LOW (22%)</span>',
+                trend: '↓ Improving',
+                trendColor: '#16a34a',
+                mood: '7.6 / 10',
+                sleep: '7.5 hrs',
+                labels: ['Day 1','Day 3','Day 5','Day 7','Day 9','Day 11','Day 13','Day 15'],
+                moodData: [3.5, 4.0, 4.8, 5.8, 6.4, 7.0, 7.3, 7.6],
+                stressData: [8.0, 7.5, 6.5, 5.5, 4.5, 3.8, 3.2, 2.9],
+                sleepData: [4.2, 4.8, 5.5, 6.2, 6.8, 7.2, 7.5, 7.5],
+                reasons: ["Recovery trajectory detected: Stress decreasing, sleep and mood normalizing."]
+            }
+        };
+
+        let chart;
+        function updateView() {
+            const key = document.getElementById('scenarioSelect').value;
+            const item = dataConfig[key];
+
+            document.getElementById('riskVal').innerHTML = item.risk;
+            document.getElementById('trendVal').innerText = item.trend;
+            document.getElementById('trendVal').style.color = item.trendColor;
+            document.getElementById('moodVal').innerText = item.mood;
+            document.getElementById('sleepVal').innerText = item.sleep;
+
+            const box = document.getElementById('reasonsContainer');
+            box.innerHTML = item.reasons.map(r => `<div class="reason-item" style="background:${key==='p102'?'#fef2f2':'#f0fdf4'}; border-color:${key==='p102'?'#ef4444':'#22c55e'}; color:${key==='p102'?'#991b1b':'#166534'};">• ${r}</div>`).join('');
+
+            if (chart) chart.destroy();
+            const ctx = document.getElementById('chartCanvas').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: item.labels,
+                    datasets: [
+                        { label: 'Mood (1-10)', data: item.moodData, borderColor: '#0284c7', backgroundColor: '#0284c7', tension: 0.3 },
+                        { label: 'Stress (1-10)', data: item.stressData, borderColor: '#ef4444', backgroundColor: '#ef4444', tension: 0.3 },
+                        { label: 'Sleep (Hours)', data: item.sleepData, borderColor: '#8b5cf6', backgroundColor: '#8b5cf6', borderDash: [5, 5], tension: 0.3 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top' } } }
+            });
+        }
+        updateView();
+    </script>
+</body>
+</html>
